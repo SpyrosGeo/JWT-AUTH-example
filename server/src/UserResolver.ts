@@ -2,6 +2,11 @@ import "reflect-metadata";
 import { Arg, Field, Mutation, ObjectType, Query, Resolver } from "type-graphql";
 import { User } from "./entity/User";
 import { hash,compare } from "bcryptjs";
+import {sign } from 'jsonwebtoken'
+
+
+
+
 @ObjectType()
 class LoginResponce {
     @Field()
@@ -49,13 +54,14 @@ export class UserResolver {
     if(!user){
         throw new Error("could not find user")
     }
-    const valid = compare(password,user.password)
+    // dont forget the await..
+    const valid = await compare(password,user.password)
     if (!valid ){
         throw new Error("Bad password")
     }
     //if user exists and creds are correct, return the accessToken
         return {
-            accessToken:''
+            accessToken:sign({userID:user.id,},'secret',{expiresIn:"15m"})
         };
   }
 }
