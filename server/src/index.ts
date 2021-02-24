@@ -1,33 +1,30 @@
 import "reflect-metadata";
+import "dotenv/config";
 import express from "express";
-import  {ApolloServer } from 'apollo-server-express'
+import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { UserResolver } from "./UserResolver";
 import { createConnection } from "typeorm";
 
-
 (async () => {
   const app = express();
-  app.get('/',(_req,res)=>res.send("Hello there"))
+  app.get("/", (_req, res) => res.send("Hello there"));
+  await createConnection();
 
- await createConnection()
+  const apolloServer = new ApolloServer({
+    schema: await buildSchema({
+      resolvers: [UserResolver],
+    }),
+    //pass req,res inside our context for use in UserResolver
+    //dont forget to create a context type after this step
+    context: ({ req, res }) => ({ req, res }),
+  });
+  //add graphql stuff to server
+  apolloServer.applyMiddleware({ app });
 
-
- const apolloServer = new ApolloServer({
-     schema: await buildSchema({
-         resolvers:[UserResolver]
-     }),
-     //pass req,res inside our context for use in UserResolver
-     //dont forget to create a context type after this step
-     context:({req,res})=>({req,res})
- })
- //add graphql stuff to server
- apolloServer.applyMiddleware({app})
-  
-  app.listen(4000,()=>{
-      console.log('Listening on port 4000')
-  })
-
+  app.listen(4000, () => {
+    console.log("Listening on port 4000");
+  });
 })();
 
 // createConnection().then(async connection => {
