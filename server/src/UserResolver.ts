@@ -25,6 +25,10 @@ export class UserResolver {
   hello() {
     return "fuck off dude ";
   }
+  @Query(()=> String)
+  bye(){
+    return "HELL NO U CANT STAY HERE"
+  }
   @Query(() => [User])
   users() {
     return User.find();
