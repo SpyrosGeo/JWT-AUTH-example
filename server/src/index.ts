@@ -16,7 +16,10 @@ import { createConnection } from "typeorm";
  const apolloServer = new ApolloServer({
      schema: await buildSchema({
          resolvers:[UserResolver]
-     })
+     }),
+     //pass req,res inside our context for use in UserResolver
+     //dont forget to create a context type after this step
+     context:({req,res})=>({req,res})
  })
  //add graphql stuff to server
  apolloServer.applyMiddleware({app})

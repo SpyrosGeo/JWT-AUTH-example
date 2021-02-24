@@ -1,16 +1,22 @@
 import "reflect-metadata";
-import { Arg, Field, Mutation, ObjectType, Query, Resolver } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  Field,
+  Mutation,
+  ObjectType,
+  Query,
+  Resolver,
+} from "type-graphql";
 import { User } from "./entity/User";
-import { hash,compare } from "bcryptjs";
-import {sign } from 'jsonwebtoken'
-
-
-
+import { hash, compare } from "bcryptjs";
+import { sign } from "jsonwebtoken";
+import { MyContext } from "./MyContext";
 
 @ObjectType()
 class LoginResponce {
-    @Field()
-    accessToken:string
+  @Field()
+  accessToken: string;
 }
 //extend resolvers
 @Resolver()
@@ -46,22 +52,32 @@ export class UserResolver {
   async login(
     //'email is what user passes|email is the variable and its type is string'
     @Arg("email", () => String) email: string,
-    @Arg("password") password: string // the ()=>String is not nessesary
-  ):Promise<LoginResponce> {
+    @Arg("password") password: string, // the ()=>String is not nessesary
+    @Ctx() { res }: MyContext
+  ): Promise<LoginResponce> {
     const user = await User.findOne({
       where: { email },
     });
-    if(!user){
-        throw new Error("could not find user")
+    if (!user) {
+      throw new Error("could not find user");
     }
     // dont forget the await..
-    const valid = await compare(password,user.password)
-    if (!valid ){
-        throw new Error("Bad password")
+    const valid = await compare(password, user.password);
+    if (!valid) {
+      throw new Error("Bad password");
     }
     //if user exists and creds are correct, return the accessToken
-        return {
-            accessToken:sign({userID:user.id,},'secret',{expiresIn:"15m"})
-        };
+
+    res.cookie(
+      "jid",
+      sign({ userID: user.id }, "anothersecretiguess", { expiresIn: "7d" }),
+      {
+        httpOnly:true,
+      
+      }
+    );
+    return {
+      accessToken: sign({ userID: user.id }, "secret", { expiresIn: "15m" }),
+    };
   }
 }
