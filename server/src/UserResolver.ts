@@ -7,11 +7,13 @@ import {
   ObjectType,
   Query,
   Resolver,
+  UseMiddleware,
 } from "type-graphql";
 import { User } from "./entity/User";
 import { hash, compare } from "bcryptjs";
 import { MyContext } from "./MyContext";
 import { createAccessToken, createRefreshToken } from "./auth";
+import { isAuth } from "./isAuth";
 
 @ObjectType()
 class LoginResponce {
@@ -25,9 +27,11 @@ export class UserResolver {
   hello() {
     return "fuck off dude ";
   }
-  @Query(()=> String)
-  bye(){
-    return "HELL NO U CANT STAY HERE"
+  @Query(() => String)
+  @UseMiddleware(isAuth)
+  bye(@Ctx() { payload }: MyContext) {
+    console.log(payload)
+    return `HELL NO U CANT STAY HERE ${payload!.userID}`;
   }
   @Query(() => [User])
   users() {
@@ -72,13 +76,9 @@ export class UserResolver {
     }
     //if user exists and creds are correct, return the accessToken
 
-    res.cookie(
-      "jid",
-      createRefreshToken(user),{
-        httpOnly:true,
-      
-      }
-    );
+    res.cookie("jid", createRefreshToken(user), {
+      httpOnly: true,
+    });
     return {
       accessToken: createAccessToken(user),
     };
