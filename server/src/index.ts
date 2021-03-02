@@ -9,6 +9,12 @@ import { createConnection } from "typeorm";
 (async () => {
   const app = express();
   app.get("/", (_req, res) => res.send("Hello there"));
+
+  //route for handling refreshing jwt token
+  app.post("/refresh_token", (req) => {
+    console.log(req.headers);
+  });
+
   await createConnection();
 
   const apolloServer = new ApolloServer({
