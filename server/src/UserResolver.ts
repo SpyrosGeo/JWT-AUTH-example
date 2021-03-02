@@ -14,6 +14,7 @@ import { hash, compare } from "bcryptjs";
 import { MyContext } from "./MyContext";
 import { createAccessToken, createRefreshToken } from "./auth";
 import { isAuth } from "./isAuth";
+import { sendRefreshToken } from "./sendRefreshToken";
 
 @ObjectType()
 class LoginResponce {
@@ -75,10 +76,7 @@ export class UserResolver {
       throw new Error("Bad password");
     }
     //if user exists and creds are correct, return the accessToken
-
-    res.cookie("jid", createRefreshToken(user), {
-      httpOnly: true,
-    });
+    sendRefreshToken(res,createRefreshToken(user))
     return {
       accessToken: createAccessToken(user),
     };
