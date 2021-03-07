@@ -3,6 +3,7 @@ import {
   Arg,
   Ctx,
   Field,
+  Int,
   Mutation,
   ObjectType,
   Query,
@@ -15,6 +16,7 @@ import { MyContext } from "./MyContext";
 import { createAccessToken, createRefreshToken } from "./auth";
 import { isAuth } from "./isAuth";
 import { sendRefreshToken } from "./sendRefreshToken";
+import { getConnection } from "typeorm";
 
 @ObjectType()
 class LoginResponce {
@@ -31,7 +33,7 @@ export class UserResolver {
   @Query(() => String)
   @UseMiddleware(isAuth)
   bye(@Ctx() { payload }: MyContext) {
-    console.log(payload)
+    console.log(payload);
     return `HELL NO U CANT STAY HERE ${payload!.userID}`;
   }
   @Query(() => [User])
@@ -56,7 +58,14 @@ export class UserResolver {
     }
     return true;
   }
+  @Mutation(() => Boolean)
+  async revokeRefreshTokensForUser(@Arg("userId", () => Int) userID: number) {
+    await getConnection()
+      .getRepository(User)
+      .increment({ id: userID }, "tokenVersion", 1);
 
+      return true;
+  }
   @Mutation(() => LoginResponce)
   async login(
     //'email is what user passes|email is the variable and its type is string'
@@ -76,7 +85,7 @@ export class UserResolver {
       throw new Error("Bad password");
     }
     //if user exists and creds are correct, return the accessToken
-    sendRefreshToken(res,createRefreshToken(user))
+    sendRefreshToken(res, createRefreshToken(user));
     return {
       accessToken: createAccessToken(user),
     };
